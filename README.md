@@ -11,6 +11,7 @@ This pre-commit hook inserts [Terraform Input Variables](https://www.terraform.i
 #### 1. Add the hook to your .pre-commit-config.yaml
 
 ```
+repos:
 - repo: git://github.com/getcloudnative/pre-commit-hooks
   rev: v1.0.0
   hooks:
@@ -19,25 +20,39 @@ This pre-commit hook inserts [Terraform Input Variables](https://www.terraform.i
 
 #### 2. Integrate the supported placeholders into your Jenkinsfile
 
-The pre-commit hook will place a representation of your Terraform input variables inside the following placeholders in your project root's `Jenkinsfile`:
+The pre-commit hook will place a representation of your Terraform input variables inside the following `BEGINNING OF … HOOK` and `END OF … HOOK` placeholders in your project root's `Jenkinsfile`:
 
 ```
 pipeline {
   agent any
 
   parameters {
+    string(name: 'aws_access_key_id',     description: 'The AWS Access Key ID for your user.')
+    string(name: 'aws_secret_access_key', description: 'The AWS Secret Access Key for your user.')
+    string(name: 'aws_region',            description: 'The AWS Region for your deployment.')
+
     // BEGINNING OF JENKINS-PIPELINE-PARAMS-FROM-TERRAFORM-INPUT-VARS PRE-COMMIT HOOK
     // END OF JENKINS-PIPELINE-PARAMS-FROM-TERRAFORM-INPUT-VARS PRE-COMMIT HOOK
+  }
+
+  environment {
+    AWS_ACCESS_KEY_ID     = "${params.aws_access_key_id}"
+    AWS_SECRET_ACCESS_KEY = "${params.aws_secret_access_key}"
+    AWS_DEFAULT_REGION    = "${params.aws_region}"
   }
 
   stages {
     stage('Init') {
       steps {
         echo "Create terraform.tfvars.json from Jenkins Pipeline parameter arguments."
+
         script {
           // BEGINNING OF JENKINS-PIPELINE-PARAMS-TO-TERRAFORM-TFVARS-JSON PRE-COMMIT HOOK
           // END OF JENKINS-PIPELINE-PARAMS-TO-TERRAFORM-TFVARS-JSON PRE-COMMIT HOOK
         }
+
+        archiveArtifacts artifacts: 'terraform.tfvars.json'
+        stash includes: 'terraform.tfvars.json', name: 'terraform-vars'
       }
     }
     ...
