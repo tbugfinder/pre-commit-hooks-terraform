@@ -80,7 +80,7 @@ def generate_jenkinsfile_params_content(terraform_module_path, jenkinsfile_path)
   f.write(result)
   f.close()
 
-def generate_jenkinsfile_tfvars_json_content(terraform_module_path, jenkinsfile_path, param_replacements):
+def generate_jenkinsfile_tfvars_json_content(terraform_module_path, jenkinsfile_path, replacements):
   BEGIN_CONTENT_PLACEHOLDER = JENKINSFILE_TFVARS_JSON_INDENT + '// BEGINNING OF ' + JENKINSFILE_TFVARS_JSON_PRE_COMMIT_HOOK_NAME
   END_CONTENT_PLACEHOLDER = JENKINSFILE_TFVARS_JSON_INDENT + '// END OF ' + JENKINSFILE_TFVARS_JSON_PRE_COMMIT_HOOK_NAME
 
@@ -89,8 +89,8 @@ def generate_jenkinsfile_tfvars_json_content(terraform_module_path, jenkinsfile_
     content += JENKINSFILE_TFVARS_JSON_INDENT + param + "\n"
   content += JENKINSFILE_TFVARS_JSON_INDENT + "writeJSON file: 'terraform.tfvars.json', json: tfvars\n"
 
-  for name in param_replacements:
-    content = content.replace(name, param_replacements[name])
+  for name in replacements:
+    content = content.replace(name, replacements[name])
 
   f = open(jenkinsfile_path,'r+')
   result = re.sub(
@@ -113,7 +113,7 @@ def main(argv=None):
   args = parser.parse_args(argv)
 
   generate_jenkinsfile_params_content(args.terraform_module, args.jenkinsfile)
-  generate_jenkinsfile_tfvars_json_content(args.terraform_module, args.jenkinsfile, args.param_replacements)
+  generate_jenkinsfile_tfvars_json_content(args.terraform_module, args.jenkinsfile, args.replacements)
 
 if __name__ == '__main__':
   exit(main())
