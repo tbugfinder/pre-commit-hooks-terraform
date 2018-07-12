@@ -106,6 +106,7 @@ def generate_jenkinsfile_tfvars_json_content(terraform_module_path, jenkinsfile_
 
 def main(argv=None):
   parser = argparse.ArgumentParser()
+  parser.add_argument('filenames', nargs='*', help='Filenames pre-commit believes have changed.'),
   parser.add_argument('-j', '--jenkinsfile', default='Jenkinsfile', help='The path to your Jenkinsfile.')
   parser.add_argument('-r', '--replacements', default='{}', type=json.loads, help="A JSON object that contains arbitrary replacement instructions for the Jenkinsfile. Example: '{ \"params.name.toString()\": \"convertToName(params.name.toString())\"'")
   parser.add_argument('-t', '--terraform-module', default='.', help='The path to your Terraform module.')
