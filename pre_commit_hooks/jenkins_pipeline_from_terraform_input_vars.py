@@ -6,6 +6,7 @@ import argparse
 import json
 import re
 import subprocess
+import sys
 
 
 JENKINSFILE_PARAMS_ID                   = 'JENKINS-PIPELINE-PARAMS-FROM-TERRAFORM-INPUT-VARS'
@@ -39,8 +40,8 @@ def transform_terraform_input_var_to_jenkinsfile_param(input):
 
   if input['Default'] is not None:
     if type(input['Default']) == dict:
-      if input['Default']['Literal'] is not '':
-        result += ', defaultValue: "%s"' % input['Default']['Literal']
+      if input['Default']['Value'] is not '':
+        result += ', defaultValue: "%s"' % input['Default']['Value']
       else:
         if input['Type'] == 'list':
           result += ', defaultValue: "[]"'
@@ -107,10 +108,15 @@ def generate_jenkinsfile_tfvars_json_content(terraform_module_path, jenkinsfile_
 def main(argv=None):
   parser = argparse.ArgumentParser()
   parser.add_argument('filenames', nargs='*', help='Filenames pre-commit believes have changed.'),
-  parser.add_argument('-j', '--jenkinsfile', default='Jenkinsfile', help='The path to your Jenkinsfile.')
+  parser.add_argument('-j', '--jenkinsfile', default='./Jenkinsfile', help="The path to your Jenkinsfile. Defaults to './Jenkinsfile'.")
   parser.add_argument('-r', '--replacements', default='{}', type=json.loads, help="A JSON object that contains arbitrary replacement instructions for the Jenkinsfile. Example: '{ \"params.name.toString()\": \"convertToName(params.name.toString())\"'")
-  parser.add_argument('-t', '--terraform-module', default='.', help='The path to your Terraform module.')
-  args = parser.parse_args(argv)
+  parser.add_argument('-t', '--terraform-module', default='.', help="The path to your Terraform module. Defaults to '.'.")
+
+  try:
+    args = parser.parse_args(argv)
+  except:
+    parser.print_help()
+    sys.exit(0)
 
   generate_jenkinsfile_params_content(args.terraform_module, args.jenkinsfile)
   generate_jenkinsfile_tfvars_json_content(args.terraform_module, args.jenkinsfile, args.replacements)
