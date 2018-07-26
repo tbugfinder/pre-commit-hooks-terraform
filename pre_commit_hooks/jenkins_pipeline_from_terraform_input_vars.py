@@ -40,26 +40,44 @@ def transform_terraform_input_var_to_jenkinsfile_param(input):
 
   if input['Default'] is not None:
     if type(input['Default']) == dict:
-      if input['Default']['Value'] is not '':
-        result += ', defaultValue: "%s"' % input['Default']['Value']
+      # Was a default value provided?
+      if input['Default']['Value'] != '':
+        result += ", defaultValue: '"
+        # Is it a complex value?
+        if type(input['Default']['Value']) in [dict, list]:
+          result += json.dumps(input['Default']['Value'])
+        else:
+          result += input['Default']['Value']
+        result += "'"
       else:
         if input['Type'] == 'list':
-          result += ', defaultValue: "[]"'
+          result += ", defaultValue: '[]'"
         elif input['Type'] == 'map':
-          result += ', defaultValue: "{}"'
+          result += ", defaultValue: '{}'"
     else:
-      result += ', defaultValue: "%s"' % input['Default']
+      result += ", defaultValue: '%s'" % input['Default']
 
   if input['Description'] is not None:
     result += ', description: "%s"' % input['Description']
 
   result += ')'
-
   return result
 
 def transform_terraform_input_var_to_tfvars_json(input):
   name = input['Name']
-  return 'tfvars.' + name + ' = params.' + name + '.toString()'
+
+  result = 'tfvars.%s = ' % name
+
+  if input['Default'] is not None:
+    if type(input['Default']) == dict:
+      # Was a default value provided?
+      if input['Default']['Value'] != '':
+        # Is it a complex value?
+        if type(input['Default']['Value']) in [dict, list]:
+          result += 'readJSON text: '
+
+  result += 'params.' + name
+  return result
 
 def generate_jenkinsfile_params_content(terraform_module_path, jenkinsfile_path):
   BEGIN_CONTENT_PLACEHOLDER = JENKINSFILE_PARAMS_INDENT + '// BEGINNING OF ' + JENKINSFILE_PARAMS_PRE_COMMIT_HOOK_NAME
@@ -109,7 +127,7 @@ def main(argv=None):
   parser = argparse.ArgumentParser()
   parser.add_argument('filenames', nargs='*', help='Filenames pre-commit believes have changed.'),
   parser.add_argument('-j', '--jenkinsfile', default='./Jenkinsfile', help="The path to your Jenkinsfile. Defaults to './Jenkinsfile'.")
-  parser.add_argument('-r', '--replacements', default='{}', type=json.loads, help="A JSON object that contains arbitrary replacement instructions for the Jenkinsfile. Example: '{ \"params.name.toString()\": \"convertToName(params.name.toString())\"'")
+  parser.add_argument('-r', '--replacements', default='{}', type=json.loads, help="A JSON object that contains arbitrary replacement instructions for the Jenkinsfile. Example: '{ \"params.name\": \"convertToName(params.name.toString())\"'")
   parser.add_argument('-t', '--terraform-module', default='.', help="The path to your Terraform module. Defaults to '.'.")
 
   try:
