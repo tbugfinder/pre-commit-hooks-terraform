@@ -4,7 +4,7 @@ Some useful hooks for https://pre-commit.com.
 
 ## Jenkins Pipeline from Terraform Input Variables
 
-This pre-commit hook inserts [Terraform Input Variables](https://www.terraform.io/intro/getting-started/variables.html) into the [parameters directive](https://jenkins.io/doc/book/pipeline/syntax/#parameters) of a [Declarative Jenkins Pipeline](https://jenkins.io/doc/book/pipeline/syntax/#declarative-pipeline) in your project's `Jenkinsfile`. Additionally, it populates a JSON data structure to populate a `terraform.tfvars.json` file with the Jenkins Pipeline's parameter arguments. Requires [segmentio/terraform-docs](https://github.com/segmentio/terraform-docs).
+This pre-commit hook inserts [Terraform Input Variables](https://www.terraform.io/intro/getting-started/variables.html) into the [parameters directive](https://jenkins.io/doc/book/pipeline/syntax/#parameters) of a [Declarative Jenkins Pipeline](https://jenkins.io/doc/book/pipeline/syntax/#declarative-pipeline) in your project's `Jenkinsfile`. Additionally, it populates a JSON data structure to populate a `terraform.tfvars.json` file with the Jenkins Pipeline's parameter arguments. Requires [segmentio/terraform-docs](https://github.com/segmentio/terraform-docs) >= v0.4.0.
 
 ### Sample Usage
 
