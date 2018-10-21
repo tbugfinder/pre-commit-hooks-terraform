@@ -5,7 +5,7 @@ from setuptools import setup
 setup(
   name='pre_commit_hooks',
   description='Some useful hooks for https://pre-commit.com.',
-  url='https://github.com/getcloudnative/pre-commit-hooks',
+  url='https://github.com/getcloudnative/pre-commit-hooks-terraform',
   version='1.0.0',
 
   author='Martin Etmajer',
@@ -25,7 +25,7 @@ setup(
   packages=find_packages(),
   entry_points={
     'console_scripts': [
-      'jenkins_pipeline_from_terraform_input_vars = pre_commit_hooks.jenkins_pipeline_from_terraform_input_vars:main',
+      'terraform_inputs_jenkins_pipeline_params = pre_commit_hooks.terraform_inputs_jenkins_pipeline_params:main',
     ],
   },
 )

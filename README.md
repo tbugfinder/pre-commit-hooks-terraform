@@ -1,10 +1,12 @@
-# pre-commit-hooks
+# pre-commit-hooks-terraform
 
-Some useful hooks for https://pre-commit.com.
+This project contains some useful hooks for https://pre-commit.com.
 
-## Jenkins Pipeline from Terraform Input Variables
+## Use-Case: Terraform Input Variables to Jenkins Pipeline Parameters
 
-This pre-commit hook inserts [Terraform Input Variables](https://www.terraform.io/intro/getting-started/variables.html) into the [parameters directive](https://jenkins.io/doc/book/pipeline/syntax/#parameters) of a [Declarative Jenkins Pipeline](https://jenkins.io/doc/book/pipeline/syntax/#declarative-pipeline) in your project's `Jenkinsfile`. Additionally, it populates a JSON data structure to populate a `terraform.tfvars.json` file with the Jenkins Pipeline's parameter arguments. Requires [segmentio/terraform-docs](https://github.com/segmentio/terraform-docs) >= v0.4.0.
+The `terraform_inputs_jenkins_pipeline_params` hook supports the definition of a [Declarative Jenkins Pipeline](https://jenkins.io/doc/book/pipeline/syntax/#declarative-pipeline)'s [parameters](https://jenkins.io/doc/book/pipeline/syntax/#parameters) from your [Terraform Input Variables](https://www.terraform.io/intro/getting-started/variables.html).
+
+*Note:* Requires [segmentio/terraform-docs](https://github.com/segmentio/terraform-docs) >= v0.4.0.
 
 ### Sample Usage
 
@@ -13,49 +15,80 @@ This pre-commit hook inserts [Terraform Input Variables](https://www.terraform.i
 ```
 repos:
 - repo: git://github.com/getcloudnative/pre-commit-hooks
-  rev: v1.0.0
+  rev: v1.2.0
   hooks:
-    - id: jenkins_pipeline_from_terraform_input_vars
+    - id: terraform_inputs_jenkins_pipeline_params
 ```
 
-#### 2. Integrate the supported placeholders into your Jenkinsfile
+#### 2. Add placeholders to your project's Jenkinsfile
 
-The pre-commit hook will place a representation of your Terraform input variables inside the following `BEGINNING OF … HOOK` and `END OF … HOOK` placeholders in your project root's `Jenkinsfile`:
+The `terraform_inputs_jenkins_pipeline_params` hook places the Jenkins Pipeline parameters inside the following `BEGINNING OF … HOOK` and `END OF … HOOK` placeholders in your project's `Jenkinsfile`:
 
 ```
 pipeline {
   agent any
 
   parameters {
-    string(name: 'aws_access_key_id',     description: 'The AWS Access Key ID for your user.')
-    string(name: 'aws_secret_access_key', description: 'The AWS Secret Access Key for your user.')
-    string(name: 'aws_region',            description: 'The AWS Region for your deployment.')
+    string(name: 'AWS_ACCESS_KEY_ID',     description: 'The AWS Access Key ID to use.')
+    string(name: 'AWS_SECRET_ACCESS_KEY', description: 'The AWS Secret Access Key to use.')
+    string(name: 'AWS_DEFAULT_REGION',    description: 'The AWS Region to use for deployment.')
 
     // BEGINNING OF JENKINS-PIPELINE-PARAMS-FROM-TERRAFORM-INPUT-VARS PRE-COMMIT HOOK
     // END OF JENKINS-PIPELINE-PARAMS-FROM-TERRAFORM-INPUT-VARS PRE-COMMIT HOOK
   }
+  ...
+}
+```
 
-  environment {
-    AWS_ACCESS_KEY_ID     = "${params.aws_access_key_id}"
-    AWS_SECRET_ACCESS_KEY = "${params.aws_secret_access_key}"
-    AWS_DEFAULT_REGION    = "${params.aws_region}"
+## Use-Case: Terraform Input Variables from Jenkins Pipeline Parameters
+
+The `terraform_inputs_jenkins_pipeline_params` hook supports the creation of a [terraform.tfvars.json](https://www.terraform.io/intro/getting-started/variables.html#from-a-file) based on your [Terraform Input Variables](https://www.terraform.io/intro/getting-started/variables.html), with values provided by the Jenkins Pipeline parameters' arguments.
+
+*Note:* Requires [segmentio/terraform-docs](https://github.com/segmentio/terraform-docs) >= v0.4.0.
+
+### Sample Usage
+
+#### 1. Add the hook to your .pre-commit-config.yaml
+
+```
+repos:
+- repo: git://github.com/getcloudnative/pre-commit-hooks
+  rev: v1.2.0
+  hooks:
+    - id: terraform_inputs_jenkins_pipeline_params
+```
+
+#### 2. Add placeholders to your project's Jenkinsfile
+
+The `terraform_inputs_jenkins_pipeline_params` hook places the Jenkins Pipeline parameters inside the following `BEGINNING OF … HOOK` and `END OF … HOOK` placeholders in your project's `Jenkinsfile`:
+
+```
+pipeline {
+  agent any
+
+  parameters {
+    ...
   }
 
   stages {
     stage('Init') {
       steps {
-        echo "Create terraform.tfvars.json from Jenkins Pipeline parameter arguments."
-
+        echo "Create the stack's terraform.tfvars.json."
         script {
           // BEGINNING OF JENKINS-PIPELINE-PARAMS-TO-TERRAFORM-TFVARS-JSON PRE-COMMIT HOOK
           // END OF JENKINS-PIPELINE-PARAMS-TO-TERRAFORM-TFVARS-JSON PRE-COMMIT HOOK
         }
-
-        archiveArtifacts artifacts: 'terraform.tfvars.json'
-        stash includes: 'terraform.tfvars.json', name: 'terraform-vars'
       }
     }
-    ...
   }
 }
+```
+
+## Testing
+
+You can test the behavior of the `terraform_inputs_jenkins_pipeline_params` hook by executing the following commands, where `TERRAFORM_MODULE_PATH` is either a path to a Terraform module directory, or contains a sequence of files containing Terraform `variable` definitions. The results can then be seen in the project's `Jenkinsfile`.
+
+```
+git clone https://github.com/getcloudnative/pre-commit-hooks-terraform.git
+pre-commit try-repo ./pre-commit-hooks-terraform terraform_inputs_jenkins_pipeline_params --files $TERRAFORM_MODULE_PATH
 ```

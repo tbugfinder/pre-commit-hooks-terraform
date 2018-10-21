@@ -17,17 +17,16 @@ JENKINSFILE_TFVARS_JSON_ID                   = 'JENKINS-PIPELINE-PARAMS-TO-TERRA
 JENKINSFILE_TFVARS_JSON_PRE_COMMIT_HOOK_NAME = JENKINSFILE_TFVARS_JSON_ID + ' PRE-COMMIT HOOK'
 JENKINSFILE_TFVARS_JSON_INDENT               = '          '
 
-
-def get_terraform_input_vars(terraform_module_path):
+def get_terraform_input_vars(terraform_files):
   try:
-    raw_json = subprocess.check_output(['terraform-docs', '--no-sort', '--with-aggregate-type-defaults', 'json', terraform_module_path])
+    raw_json = subprocess.check_output(['terraform-docs', '--no-sort', '--with-aggregate-type-defaults', 'json', ' '.join(terraform_files)])
   except subprocess.CalledProcessError:
     raw_json = '{ "Inputs": [] }'
 
   return json.loads(raw_json)
 
-def process_terraform_input_vars(visitor, terraform_module_path):
-  json = get_terraform_input_vars(terraform_module_path)
+def process_terraform_input_vars(visitor, terraform_files):
+  json = get_terraform_input_vars(terraform_files)
 
   result = []
   for input in json['Inputs']:
@@ -79,12 +78,12 @@ def transform_terraform_input_var_to_tfvars_json(input):
   result += 'params.' + name
   return result
 
-def generate_jenkinsfile_params_content(terraform_module_path, jenkinsfile_path):
+def generate_jenkinsfile_params_content(terraform_files, jenkinsfile_path):
   BEGIN_CONTENT_PLACEHOLDER = JENKINSFILE_PARAMS_INDENT + '// BEGINNING OF ' + JENKINSFILE_PARAMS_PRE_COMMIT_HOOK_NAME
   END_CONTENT_PLACEHOLDER = JENKINSFILE_PARAMS_INDENT + '// END OF ' + JENKINSFILE_PARAMS_PRE_COMMIT_HOOK_NAME
 
   content = ''
-  for param in process_terraform_input_vars(transform_terraform_input_var_to_jenkinsfile_param, terraform_module_path):
+  for param in process_terraform_input_vars(transform_terraform_input_var_to_jenkinsfile_param, terraform_files):
     content += JENKINSFILE_PARAMS_INDENT + param + "\n"
 
   f = open(jenkinsfile_path,'r+')
@@ -96,15 +95,16 @@ def generate_jenkinsfile_params_content(terraform_module_path, jenkinsfile_path)
   )
 
   f.seek(0)
+  f.truncate()
   f.write(result)
   f.close()
 
-def generate_jenkinsfile_tfvars_json_content(terraform_module_path, jenkinsfile_path, replacements):
+def generate_jenkinsfile_tfvars_json_content(terraform_files, jenkinsfile_path, replacements):
   BEGIN_CONTENT_PLACEHOLDER = JENKINSFILE_TFVARS_JSON_INDENT + '// BEGINNING OF ' + JENKINSFILE_TFVARS_JSON_PRE_COMMIT_HOOK_NAME
   END_CONTENT_PLACEHOLDER = JENKINSFILE_TFVARS_JSON_INDENT + '// END OF ' + JENKINSFILE_TFVARS_JSON_PRE_COMMIT_HOOK_NAME
 
   content = JENKINSFILE_TFVARS_JSON_INDENT + "def tfvars = readJSON text: '{}'\n"
-  for param in process_terraform_input_vars(transform_terraform_input_var_to_tfvars_json, terraform_module_path):
+  for param in process_terraform_input_vars(transform_terraform_input_var_to_tfvars_json, terraform_files):
     content += JENKINSFILE_TFVARS_JSON_INDENT + param + "\n"
   content += JENKINSFILE_TFVARS_JSON_INDENT + "writeJSON file: 'terraform.tfvars.json', json: tfvars\n"
 
@@ -120,6 +120,7 @@ def generate_jenkinsfile_tfvars_json_content(terraform_module_path, jenkinsfile_
   )
 
   f.seek(0)
+  f.truncate()
   f.write(result)
   f.close()
 
@@ -127,8 +128,7 @@ def main(argv=None):
   parser = argparse.ArgumentParser()
   parser.add_argument('filenames', nargs='*', help='Filenames pre-commit believes have changed.'),
   parser.add_argument('-j', '--jenkinsfile', default='./Jenkinsfile', help="The path to your Jenkinsfile. Defaults to './Jenkinsfile'.")
-  parser.add_argument('-r', '--replacements', default='{}', type=json.loads, help="A JSON object that contains arbitrary replacement instructions for the Jenkinsfile. Example: '{ \"params.name\": \"convertToName(params.name.toString())\"'")
-  parser.add_argument('-t', '--terraform-module', default='.', help="The path to your Terraform module. Defaults to '.'.")
+  parser.add_argument('-r', '--replacements', default='{}', type=json.loads, help="A JSON object that contains arbitrary replacement instructions for the Jenkinsfile. Example: '{ \"params.name\": \"convertToName(params.name.toString())\" }'")
 
   try:
     args = parser.parse_args(argv)
@@ -136,8 +136,8 @@ def main(argv=None):
     parser.print_help()
     sys.exit(0)
 
-  generate_jenkinsfile_params_content(args.terraform_module, args.jenkinsfile)
-  generate_jenkinsfile_tfvars_json_content(args.terraform_module, args.jenkinsfile, args.replacements)
+  generate_jenkinsfile_params_content(args.filenames, args.jenkinsfile)
+  generate_jenkinsfile_tfvars_json_content(args.filenames, args.jenkinsfile, args.replacements)
 
 if __name__ == '__main__':
   exit(main())

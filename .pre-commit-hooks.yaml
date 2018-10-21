@@ -1,7 +1,7 @@
-- id: jenkins_pipeline_from_terraform_input_vars
-  name: Jenkins Pipeline Parameters from Terraform Input Variables
-  description: Inserts Terraform Input Variables into the parameters directive of a Declarative Jenkins Pipeline in your project's Jenkinsfile. Additionally, it populates a JSON data structure to populate a terraform.tfvars.json file with the Jenkins Pipeline's parameter arguments. Requires segmentio/terraform-docs.
-  entry: jenkins_pipeline_from_terraform_input_vars
+- id: terraform_inputs_jenkins_pipeline_params
+  name: Terraform Inputs from/to Jenkins Pipeline Parameters
+  description: Supports the definition of a (declarative) Jenkins Pipeline's parameters from your Terraform Input Variables. Also supports the creation of a terraform.tfvars.json file based on your Terraform Input Variables, with values provided by the Jenkins Pipeline parameters' arguments. Requires segmentio/terraform-docs >= v0.4.0.
+  entry: terraform_inputs_jenkins_pipeline_params
   language: python
   files: (\.tf)$
   exclude: \.terraform\/.*$

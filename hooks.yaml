@@ -1,6 +1,6 @@
-- id: jenkins_pipeline_from_terraform_input_vars
-  name: Jenkins Pipeline Parameters from Terraform Input Variables
-  language: system
+- id: jenkins_pipeline_params_terraform_input_vars
+  name: Jenkins Pipeline Parameters from/to Terraform Input Variables
+  language: python
   files: (\.tf)$
   exclude: \.terraform\/.*$
   minimum_pre_commit_version: 0.15.0
