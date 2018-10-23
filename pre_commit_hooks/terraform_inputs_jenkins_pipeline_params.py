@@ -67,13 +67,8 @@ def transform_terraform_input_var_to_tfvars_json(input):
 
   result = 'tfvars.%s = ' % name
 
-  if input['Default'] is not None:
-    if type(input['Default']) == dict:
-      # Was a default value provided?
-      if input['Default']['Value'] != '':
-        # Is it a complex value?
-        if type(input['Default']['Value']) in [dict, list]:
-          result += 'readJSON text: '
+  if input['Type'] in ['list', 'map']:
+    result += 'readJSON text: '
 
   result += 'params.' + name
   return result
