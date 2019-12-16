@@ -6,7 +6,9 @@ This project contains some useful hooks for https://pre-commit.com.
 
 The `terraform_inputs_jenkins_pipeline_params` hook supports the definition of a [Declarative Jenkins Pipeline](https://jenkins.io/doc/book/pipeline/syntax/#declarative-pipeline)'s [parameters](https://jenkins.io/doc/book/pipeline/syntax/#parameters) from your [Terraform Input Variables](https://www.terraform.io/intro/getting-started/variables.html).
 
-*Note:* Requires [segmentio/terraform-docs](https://github.com/segmentio/terraform-docs) >= v0.4.0.
+*Note:*
+1. Requires [segmentio/terraform-docs](https://github.com/segmentio/terraform-docs) >= v0.4.0.
+2. Requires [terraform-docs12](https://raw.githubusercontent.com/marcuscaisey/.dotfiles/master/scripts/terraform-docs12)
 
 ### Sample Usage
 
