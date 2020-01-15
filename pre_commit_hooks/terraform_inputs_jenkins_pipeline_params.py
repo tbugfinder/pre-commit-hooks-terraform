@@ -21,7 +21,7 @@ def get_terraform_input_vars(terraform_files):
   try:
     raw_json = subprocess.check_output(['terraform-docs', '--no-sort', 'json', '.'])
   except subprocess.CalledProcessError:
-    raw_json = '{ "Inputs": [] }'
+    raw_json = '{ "inputs": [] }'
 
   return json.loads(raw_json)
 
@@ -29,45 +29,45 @@ def process_terraform_input_vars(visitor, terraform_files):
   json = get_terraform_input_vars(terraform_files)
 
   result = []
-  for input in json['Inputs']:
+  for input in json['inputs']:
     result.append(visitor(input))
 
   return result
 
 def transform_terraform_input_var_to_jenkinsfile_param(input):
-  result = 'string(name: "' + input['Name'] + '"'
+  result = 'string(name: "' + input['name'] + '"'
 
-  if input['Default'] is not None:
-    if type(input['Default']) == dict:
+  if input['default'] is not None:
+    if type(input['default']) == dict:
       # Was a default value provided?
-      if input['Default']['Value'] != '':
+      if input['default']['Value'] != '':
         result += ", defaultValue: '"
         # Is it a complex value?
-        if type(input['Default']['Value']) in [dict, list]:
-          result += json.dumps(input['Default']['Value'])
+        if type(input['default']['Value']) in [dict, list]:
+          result += json.dumps(input['default']['Value'])
         else:
-          result += input['Default']['Value']
+          result += input['default']['Value']
         result += "'"
       else:
-        if input['Type'] == 'list':
+        if input['type'] == 'list':
           result += ", defaultValue: '[]'"
-        elif input['Type'] == 'map':
+        elif input['type'] == 'map':
           result += ", defaultValue: '{}'"
     else:
-      result += ", defaultValue: '%s'" % input['Default']
+      result += ", defaultValue: '%s'" % input['default']
 
-  if input['Description'] is not None:
-    result += ', description: "%s"' % input['Description']
+  if input['description'] is not None:
+    result += ', description: "%s"' % input['description']
 
   result += ')'
   return result
 
 def transform_terraform_input_var_to_tfvars_json(input):
-  name = input['Name']
+  name = input['name']
 
   result = 'tfvars.%s = ' % name
 
-  if input['Type'] in ['list', 'map']:
+  if input['type'] in ['list', 'map']:
     result += 'readJSON text: '
 
   result += 'params.' + name
