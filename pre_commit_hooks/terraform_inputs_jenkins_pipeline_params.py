@@ -19,7 +19,7 @@ JENKINSFILE_TFVARS_JSON_INDENT               = '          '
 
 def get_terraform_input_vars(terraform_files):
   try:
-    raw_json = subprocess.check_output(['terraform-docs12', '--no-sort', '--with-aggregate-type-defaults', 'json'] + terraform_files)
+    raw_json = subprocess.check_output(['terraform-docs', '--no-sort', 'json', '.'])
   except subprocess.CalledProcessError:
     raw_json = '{ "Inputs": [] }'
 
